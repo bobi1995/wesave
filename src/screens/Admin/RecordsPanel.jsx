@@ -70,27 +70,28 @@ const RecordsPanel = ({ data }) => {
       .catch((error) => {
         console.log(error);
       });
-    console.log(debit / records);
-    console.log(`${data.godina}-${data.mesec}-01 00:00:00`);
-    console.log(`${data.godina}-${data.mesec}-31 00:00:00`);
 
+    console.log(records);
     // UPDATE WITH NEW DEBIT
     const updating = await axios
       .post(`${address}/admin/west/savedebit`, {
         startDate: `${data.godina}-${data.mesec}-01 00:00:00`,
-        endDate: `${data.godina}-${data.mesec}-31 00:00:00`,
+        endDate: `${data.godina}-${data.mesec}-31 23:56:00`,
         step: Math.round(debit / records),
       })
       .then((response) => {
-        return console.log(response);
+        return console.log("updated");
       })
       .catch((error) => {
         return console.log(error);
       });
+    console.log("here2");
 
     //FETCH DATA
     const fetchData = await axios
-      .get(`${address}/`)
+      .get(
+        `${address}/period?startDate=${data.godina}-${data.mesec}-01 00:00:00&endDate=${data.godina}-${data.mesec}-31 23:56:00`
+      )
       .then((response) => {
         setResults(response.data);
         setLoading(false);
@@ -100,8 +101,9 @@ const RecordsPanel = ({ data }) => {
         console.log(error);
         setLoading(false);
       });
+    console.log("here3");
 
-    //CALCULATE SAVINGS
+    //CALCULATE KPD
     if (fetchData.length > 0) {
       const newArr = fetchData.map((el, index) => {
         if (el.DT2 === "0" || el.DT4 === "0" || el.DT8 === "0") {
@@ -118,43 +120,29 @@ const RecordsPanel = ({ data }) => {
               savings: 0,
             };
           } else {
-            console.log(
-              index,
-              fetchData[index].P2,
-              fetchData[index].DT2,
-              fetchData[index].P6,
-              fetchData[index].DT7,
-              fetchData[index].P4
-            );
             const kpd =
-              (fetchData[index].P2 - fetchData[index - 1].P2) /
-              ((fetchData[index].DT2 - fetchData[index - 1].DT2) * 3.6) /
-              (((fetchData[index].P6 - fetchData[index - 1].P6) /
-                ((fetchData[index].DT7 - fetchData[index - 1].DT7) / 1000)) *
-                fetchData[index].P4 *
-                10 *
-                9.81);
+              ((fetchData[index].P2 - fetchData[index - 1].P2) * 3600000) /
+              (fetchData[index].DT2 - fetchData[index - 1].DT2) /
+              (((fetchData[index].P6 - fetchData[index - 1].P6) *
+                98100 *
+                fetchData[index].P4) /
+                (fetchData[index].DT7 - fetchData[index - 1].DT7));
 
-            const parts = kpd.toString().split(".");
-
-            if (parts[0] >= 1 && parts[0] <= 2) {
+            if (kpd >= 1 && kpd <= 2) {
               //savings in w/h
               const saving =
-                ((kpd - kpdStaraZapad) *
-                  ((fetchData[index].P6 - fetchData[index - 1].P6) /
-                    ((fetchData[index].DT6 - fetchData[index - 1].DT6) /
-                      1000)) *
+                ((kpdStaraZapad - kpd) *
+                  (fetchData[index].P6 - fetchData[index - 1].P6) *
                   fetchData[index].P4 *
-                  10 *
-                  9,
-                81) /
-                ((fetchData[index].DT2 - fetchData[index - 1].DT2) /
-                  (3600 * 1000));
+                  98100) /
+                (fetchData[index].DT7 - fetchData[index - 1].DT7) /
+                ((3600 * 1000) /
+                  (fetchData[index].DT2 - fetchData[index - 1].DT2));
 
               return {
                 date: el.DT,
                 kpdValue: kpd,
-                savings: saving / 1000,
+                savings: saving,
               };
             } else
               return {
@@ -166,6 +154,24 @@ const RecordsPanel = ({ data }) => {
         }
       });
       console.log(newArr);
+      newArr.map(
+        async (el) =>
+          await axios
+            .post(`${address}/admin/west/savings`, {
+              dt: el.date,
+              saving: el.savings,
+              kpd: el.kpdValue,
+            })
+            .then((response) => {
+              setResults(response.data);
+              setLoading(false);
+              return response.data;
+            })
+            .catch((error) => {
+              console.log(error);
+              setLoading(false);
+            })
+      );
     }
   };
 
