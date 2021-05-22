@@ -11,6 +11,7 @@ import { mainGreen } from "../../globals/colors";
 import { address } from "../../globals/address";
 import axios from "axios";
 import { kpdStaraZapad } from "../../globals/constants";
+import moment from "moment";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -60,6 +61,8 @@ const RecordsPanel = ({ data }) => {
   const [loading, setLoading] = useState(false);
   const handleSaveBtn = async () => {
     //GET LAST MONTH
+    setLoading(true);
+
     const records = await axios
       .get(
         `${address}/admin/west/count?selectedMonth=${data.mesec}&selectedYear=${data.godina}`
@@ -71,7 +74,6 @@ const RecordsPanel = ({ data }) => {
         console.log(error);
       });
 
-    console.log(records);
     // UPDATE WITH NEW DEBIT
     const updating = await axios
       .post(`${address}/admin/west/savedebit`, {
@@ -80,12 +82,11 @@ const RecordsPanel = ({ data }) => {
         step: Math.round(debit / records),
       })
       .then((response) => {
-        return console.log("updated");
+        return;
       })
       .catch((error) => {
         return console.log(error);
       });
-    console.log("here2");
 
     //FETCH DATA
     const fetchData = await axios
@@ -94,32 +95,33 @@ const RecordsPanel = ({ data }) => {
       )
       .then((response) => {
         setResults(response.data);
-        setLoading(false);
         return response.data;
       })
       .catch((error) => {
         console.log(error);
         setLoading(false);
       });
-    console.log("here3");
 
     //CALCULATE KPD
     if (fetchData.length > 0) {
       const newArr = fetchData.map((el, index) => {
         if (el.DT2 === "0" || el.DT4 === "0" || el.DT8 === "0") {
           return {
-            date: el.DT,
-            kpdValue: 0,
-            savings: 0,
+            dt: moment(el.DT).format("YYYY-MM-DD HH:mm:ss"),
+            Saving: 0,
+            kpd: 0,
+            target: 0,
           };
         } else {
           if (!fetchData[index - 1]) {
             return {
-              date: el.DT,
-              kpdValue: 0,
-              savings: 0,
+              dt: moment(el.DT).format("YYYY-MM-DD HH:mm:ss"),
+              Saving: 0,
+              kpd: 0,
+              target: 0,
             };
           } else {
+            //1/kpd calculating
             const kpd =
               ((fetchData[index].P2 - fetchData[index - 1].P2) * 3600000) /
               (fetchData[index].DT2 - fetchData[index - 1].DT2) /
@@ -139,39 +141,47 @@ const RecordsPanel = ({ data }) => {
                 ((3600 * 1000) /
                   (fetchData[index].DT2 - fetchData[index - 1].DT2));
 
+              //savings target
+              const target =
+                ((kpdStaraZapad - 1.39718727) *
+                  (fetchData[index].P6 - fetchData[index - 1].P6) *
+                  fetchData[index].P4 *
+                  98100) /
+                (fetchData[index].DT7 - fetchData[index - 1].DT7) /
+                ((3600 * 1000) /
+                  (fetchData[index].DT2 - fetchData[index - 1].DT2));
+
               return {
-                date: el.DT,
-                kpdValue: kpd,
-                savings: saving,
+                dt: moment(el.DT).format("YYYY-MM-DD HH:mm:ss"),
+                Saving: saving,
+                kpd: kpd,
+                target: target,
               };
             } else
               return {
-                date: el.DT,
-                kpdValue: 0,
-                savings: 0,
+                dt: moment(el.DT).format("YYYY-MM-DD HH:mm:ss"),
+                Saving: 0,
+                kpd: 0,
+                target: 0,
               };
           }
         }
       });
-      console.log(newArr);
-      newArr.map(
-        async (el) =>
-          await axios
-            .post(`${address}/admin/west/savings`, {
-              dt: el.date,
-              saving: el.savings,
-              kpd: el.kpdValue,
-            })
-            .then((response) => {
-              setResults(response.data);
-              setLoading(false);
-              return response.data;
-            })
-            .catch((error) => {
-              console.log(error);
-              setLoading(false);
-            })
-      );
+
+      axios
+        .post(`${address}/admin/west/savings`, {
+          savingsData: newArr,
+        })
+        .then((response) => {
+          window.location.reload();
+          setLoading(false);
+          setResults(response.data);
+          return response.data;
+        })
+        .catch((error) => {
+          console.log(error);
+          setLoading(false);
+        });
     }
   };
 

@@ -14,6 +14,7 @@ const Filter = (props) => {
   return (
     <MuiPickersUtilsProvider utils={MomentUtils}>
       <DateTimePicker
+        style={{ marginRight: "2%" }}
         value={props.startDate}
         onChange={handleStartDate}
         placeholder="Ден/Месец/Година/Час"

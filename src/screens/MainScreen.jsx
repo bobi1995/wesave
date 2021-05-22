@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AppBar, Tab, Box, makeStyles } from "@material-ui/core";
+import { AppBar, Tab, Box, makeStyles, Tooltip } from "@material-ui/core";
 import { TabContext, TabList, TabPanel } from "@material-ui/lab";
 import ArrowBackIcon from "@material-ui/icons/ArrowBack";
 import ArrowForwardIcon from "@material-ui/icons/ArrowForward";
@@ -31,7 +31,14 @@ const MainScreen = () => {
           >
             <Tab label="Общо " value="1" icon={<SyncAltIcon />} />
             <Tab label="Помпа Запад" value="3" icon={<ArrowBackIcon />} />
-            <Tab label="Помпа Изток" value="2" icon={<ArrowForwardIcon />} />
+            <Tooltip title="Coming Soon">
+              <Tab
+                disabled
+                label="Помпа Изток"
+                value="2"
+                icon={<ArrowForwardIcon />}
+              />
+            </Tooltip>
             <Tab label="Администратор" value="4" icon={<BuildIcon />} />
           </TabList>
         </AppBar>
@@ -41,7 +48,7 @@ const MainScreen = () => {
             <Together />
           </TabPanel>
           <TabPanel value="2">
-            <Box>2</Box>
+            <Box>Iztok</Box>
           </TabPanel>
           <TabPanel value="3">
             <West />

@@ -5,6 +5,7 @@ import { address } from "../globals/address";
 import Table from "../components/TableCombined";
 import Filter from "../components/Filter";
 import moment from "moment";
+import Loader from "../components/plainCicularLoader";
 
 const useStyles = makeStyles({});
 const Together = () => {
@@ -53,7 +54,13 @@ const Together = () => {
 
   return (
     <Box>
-      <Box>
+      <Box
+        style={{
+          justifyContent: "center",
+          display: "flex",
+          marginBottom: "3%",
+        }}
+      >
         <Filter
           startDate={startDate}
           endDate={endDate}
@@ -69,7 +76,7 @@ const Together = () => {
           <Table data={results} />
         </Box>
       ) : (
-        "loading"
+        <Loader />
       )}
     </Box>
   );

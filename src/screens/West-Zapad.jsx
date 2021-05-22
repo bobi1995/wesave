@@ -6,16 +6,16 @@ import Table from "./West-Zapad/Table";
 import Filter from "../components/Filter";
 import moment from "moment";
 import Loader from "../components/plainCicularLoader";
-import SavedEnergy from "../components/SavedEnergy";
+import Graphs from "../components/Graphs";
 
 const useStyles = makeStyles({});
 
 const West = () => {
   const [results, setResults] = useState([]);
+  const [savingResults, setSavingResults] = useState([]);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [flow, setFlow] = useState(38, 19);
 
   useEffect(() => {
     setLoading(true);
@@ -30,11 +30,20 @@ const West = () => {
         console.log(error);
         setLoading(false);
       });
+
+    axios
+      .get(`${address}/admin/west/savings`)
+      .then((response) => {
+        setSavingResults(response.data);
+      })
+      .catch((error) => {
+        // handle error
+        console.log(error);
+      });
   }, []);
 
   const handleCalculate = () => {
     setLoading(true);
-    console.log(`${address}/period?startDate=${startDate}&endDate=${endDate}`);
     axios
       .get(
         `${address}/period?startDate=${moment(startDate).format(
@@ -50,11 +59,39 @@ const West = () => {
         console.log(error);
         setLoading(false);
       });
+
+    console.log(
+      `${address}/west/savings/period?startDate=${moment(startDate).format(
+        "YYYY-MM-DD HH:mm"
+      )}&endDate=${moment(endDate).format("YYYY-MM-DD HH:mm")}`
+    );
+
+    axios
+      .get(
+        `${address}/west/savings/period?startDate=${moment(startDate).format(
+          "YYYY-MM-DD HH:mm"
+        )}&endDate=${moment(endDate).format("YYYY-MM-DD HH:mm")}`
+      )
+      .then((response) => {
+        setSavingResults(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        // handle error
+        console.log(error);
+        setLoading(false);
+      });
   };
 
   return (
     <Box>
-      <Box>
+      <Box
+        style={{
+          justifyContent: "center",
+          display: "flex",
+          marginBottom: "3%",
+        }}
+      >
         <Filter
           startDate={startDate}
           endDate={endDate}
@@ -65,8 +102,7 @@ const West = () => {
       </Box>
       {results.length > 0 && !loading ? (
         <Box>
-          {/* <Graphs data={results} /> */}
-          <SavedEnergy data={results} flow={flow} />
+          <Graphs results={savingResults} />
           <Table data={results} />
         </Box>
       ) : (

@@ -4,6 +4,7 @@ import { address } from "../globals/address";
 import { mainGreen } from "../globals/colors";
 import axios from "axios";
 import RecordsPanel from "./Admin/RecordsPanel";
+import Loader from "../components/plainCicularLoader";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -39,19 +40,35 @@ const Admin = () => {
   }, []);
 
   return (
-    <Box className={classes.mainContainer}>
-      <Box style={{ width: "45%", textAlign: "center" }}>
-        <Typography className={classes.heading}>Запад</Typography>
-        {west.map((el) => (
-          <RecordsPanel key={el.mesec + el.godina} data={el} />
-        ))}
-      </Box>
-      <Box style={{ width: "45%", textAlign: "center" }}>
-        <Typography className={classes.heading}>Изток</Typography>
-        {west.map((el) => (
-          <RecordsPanel data={el} key={el.mesec + el.godina} />
-        ))}
-      </Box>
+    <Box>
+      {loading ? (
+        <Loader />
+      ) : (
+        <Box className={classes.mainContainer}>
+          <Box style={{ width: "45%", textAlign: "center" }}>
+            <Typography className={classes.heading}>Запад</Typography>
+            {west.map((el) => (
+              <RecordsPanel
+                key={el.mesec + el.godina}
+                data={el}
+                loading={loading}
+                setLoading={setLoading}
+              />
+            ))}
+          </Box>
+          <Box style={{ width: "45%", textAlign: "center" }}>
+            <Typography className={classes.heading}>Изток</Typography>
+            <Typography
+              style={{
+                fontSize: 30,
+                marginTop: "35%",
+              }}
+            >
+              Не е достъпна
+            </Typography>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };

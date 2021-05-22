@@ -17,7 +17,21 @@ import numeral from "numeral";
 const TableZapad = ({ data }) => {
   return (
     <MaterialTable
-      title="Таблица с измерени стойности за периода"
+      style={{ marginTop: "3%" }}
+      title={
+        <div>
+          Данни за периода&nbsp;
+          <b>
+            <Moment format="DD MMM YYYY HH:mm">
+              {data[data.length - 1].DT}
+            </Moment>
+          </b>
+          &nbsp;-&nbsp;
+          <b>
+            <Moment format="DD MMM YYYY HH:mm">{data[0].DT}</Moment>
+          </b>
+        </div>
+      }
       icons={{
         Filter: React.forwardRef((props, ref) => <SearchIcon ref={ref} />),
         Search: React.forwardRef((props, ref) => <SearchIcon ref={ref} />),
